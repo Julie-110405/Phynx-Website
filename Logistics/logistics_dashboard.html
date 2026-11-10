@@ -1,0 +1,146 @@
+<!DOCTYPE html>
+<html lang="en"><head><meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Quicksand:wght@400;500;600&display=swap">
+<title>Pynx Logistics Dashboard</title>
+<style>
+:root{--bg:#efebe5;--ink:#111;--mut:#6b655d;--card:#fff;--line:#e8e3dc;--ok:#1f7a4d;--okb:#d8f0e2;--warn:#a8741a;--warnb:#fbecc8;--bad:#b3392f;--badb:#f8d9d5;--sb:#000;--acc:#111}
+*{box-sizing:border-box}html,body{margin:0}
+body{font-family:Quicksand,Inter,"Segoe UI",system-ui,-apple-system,Arial,sans-serif;background:var(--bg);color:var(--ink);font-size:14px}
+.app{display:grid;grid-template-columns:260px 1fr;min-height:100vh}
+.sb{background:var(--sb);color:#fff;padding:18px 14px;position:sticky;top:0;height:100vh;display:flex;flex-direction:column;overflow-y:auto}
+.logo{display:block;margin:6px auto 18px;width:150px;max-width:70%;height:auto}
+.nav{display:flex;flex-direction:column;gap:2px}
+.nav a{display:flex;align-items:center;gap:12px;padding:11px 14px;border-radius:12px;color:#fff;text-decoration:none;font-size:15.5px;font-weight:500;cursor:pointer}
+.nav a:hover{background:#1c1c1c}.nav a.on{background:#3a3a3a}.nav a:focus-visible,button:focus-visible{outline:2px solid var(--acc);outline-offset:2px}
+.nav-icon{width:20px;text-align:center}
+.who{margin-top:auto;padding-top:14px;border-top:1px solid #2a2a2a;font-size:12px;color:#bbb}.who b{display:block;color:#fff;font-size:13px}
+main{padding:30px 32px 50px;min-width:0}
+h1{font-weight:400;font-size:34px;margin:0 0 4px}.sub{color:var(--mut);margin:0 0 22px}
+h2{font-weight:600;font-size:17px;margin:0 0 12px}
+.card{background:var(--card);border-radius:20px;padding:20px}
+.grid{display:grid;gap:16px;margin-bottom:16px}.g4{grid-template-columns:repeat(4,1fr)}.g2{grid-template-columns:1fr 1fr;align-items:start}
+.big{font-size:30px;font-weight:600;margin:6px 0 2px}.mut{color:var(--mut);font-size:13px}
+.row{display:flex;justify-content:space-between;gap:10px;align-items:center;padding:9px 0;border-top:1px solid var(--line)}.row:first-of-type{border-top:0}
+.pill{display:inline-block;padding:3px 10px;border-radius:99px;font-size:12px;font-weight:600;white-space:nowrap}
+.In,.Rel,.All{background:var(--okb);color:var(--ok)}.Low,.Pen,.Part{background:var(--warnb);color:var(--warn)}.Out{background:var(--badb);color:var(--bad)}
+.tools{display:flex;flex-wrap:wrap;gap:10px;margin-bottom:14px;align-items:center}
+input,select{font:inherit;padding:10px 12px;border:1px solid var(--line);border-radius:12px;background:#fff;min-width:0;width:100%}
+.tools input,.tools select{width:auto;flex:1 1 150px}
+button{font:inherit;font-weight:600;padding:9px 14px;border-radius:10px;border:1px solid var(--line);background:#fff;cursor:pointer}
+button.pri{background:var(--acc);color:#fff;border-color:var(--acc)}button.sm{padding:6px 11px;font-size:13px}
+.tw{overflow-x:auto}table{width:100%;border-collapse:collapse;min-width:620px}
+th{font-size:12px;color:var(--mut);text-align:left;padding:10px 8px;font-weight:600}
+td{padding:12px 8px;border-top:1px solid var(--line);vertical-align:middle}.r{text-align:right}
+.tabs{display:flex;gap:8px;flex-wrap:wrap;margin-bottom:14px}.tabs button{border-radius:99px}.tabs button.on{background:var(--ink);color:#fff;border-color:var(--ink)}
+label{display:block;font-weight:600;font-size:12.5px;margin:12px 0 5px}
+.modal{position:fixed;inset:0;background:rgba(0,0,0,.45);display:flex;align-items:center;justify-content:center;padding:16px;z-index:9}
+.modal .card{width:100%;max-width:460px;max-height:90vh;overflow:auto}
+.rc{font-family:ui-monospace,Consolas,monospace;font-size:13px}.rc .row{padding:5px 0}
+.toast{position:fixed;bottom:18px;left:50%;transform:translateX(-50%);background:var(--ink);color:#fff;padding:10px 18px;border-radius:99px;z-index:10}
+@media(max-width:1000px){.g4{grid-template-columns:1fr 1fr}.g2{grid-template-columns:1fr}}
+@media(max-width:800px){.app{grid-template-columns:1fr}.sb{position:static;height:auto;padding:12px 10px}.brand{text-align:center}.nav{flex-direction:row;flex-wrap:wrap;justify-content:center;gap:6px}.nav a{padding:8px 12px;font-size:13px;background:#141414}.who{display:none}main{padding:20px 14px 40px}h1{font-size:25px}}
+@media(max-width:520px){.g4{grid-template-columns:1fr}}
+@media print{.sb,.tools,.tabs,.noprint{display:none!important}.app{display:block}main{padding:0}.modal{position:static;background:none}}
+</style></head><body>
+<div class="app">
+<aside class="sb">
+ <img class="logo" src="assets/images/pynx-logo-transparent.png" alt="Pynx - Beyond the Trend">
+ <nav class="nav" id="nav"></nav>
+ <div class="who"><b>Logistics Department</b>Delivery Handler / Receiving Staff</div>
+</aside>
+<main id="main"></main>
+</div>
+<div id="layer"></div>
+<script>
+const $=s=>document.querySelector(s);
+const esc=s=>String(s).replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+const CLS={Pending:'Pen',Scheduled:'Part',Received:'Part',Completed:'Rel','With Issues':'Out',Delayed:'Out',Approved:'All',Rejected:'Out',Open:'Pen',Resolved:'Rel'};
+const pill=s=>`<span class="pill ${CLS[s]||'Pen'}">${esc(s)}</span>`;
+const D={
+ dels:[
+  {id:'DEL-2025-001',po:'PO-2025-045',supplier:'ABC Textile Co.',date:'Apr 28, 2025',items:'Cotton Fabric x50 m',status:'Pending'},
+  {id:'DEL-2025-002',po:'PO-2025-046',supplier:'Fabric Plus Inc.',date:'Apr 29, 2025',items:'Packaging Supplies x50',status:'Pending'},
+  {id:'DEL-2025-003',po:'PO-2025-047',supplier:'PrintWorks Co.',date:'Apr 30, 2025',items:'Printing Materials x15',status:'Scheduled'},
+  {id:'DEL-2025-004',po:'PO-2025-044',supplier:'ABC Textile Co.',date:'Apr 26, 2025',items:'Zippers x200',status:'Received'},
+  {id:'DEL-2025-005',po:'PO-2025-043',supplier:'Fabric Plus Inc.',date:'Apr 24, 2025',items:'Buttons x500',status:'Completed'},
+  {id:'DEL-2025-006',po:'PO-2025-042',supplier:'PrintWorks Co.',date:'Apr 23, 2025',items:'Fabric Rolls x10',status:'With Issues'}],
+ disc:[{id:'DSC-001',del:'DEL-2025-006',issue:'Damaged items (3 rolls)',status:'Open',res:''}],
+ reqs:[
+  {id:'REQ-004',item:'Packaging Supplies',qty:50,status:'Approved'},
+  {id:'REQ-005',item:'Shipping Labels',qty:200,status:'Pending'},
+  {id:'REQ-006',item:'Pallet Wrap',qty:10,status:'Rejected'}]
+};
+const VIEWS=[['dashboard','Dashboard'],['requisition','Requisition'],['delivery','Delivery']];
+const TABS=['Incoming Deliveries','Inspection','Discrepancies','Resolutions','Reports'];
+let view='dashboard',tab=TABS[0],q='';
+const nextId=(p,a)=>p+'-'+String(a.length+1).padStart(3,'0');
+const by=s=>D.dels.filter(d=>s.includes(d.status));
+const find=id=>D.dels.find(d=>d.id===id);
+function toast(m){const t=document.createElement('div');t.className='toast';t.textContent=m;document.body.appendChild(t);setTimeout(()=>t.remove(),2200)}
+function modal(h){$('#layer').innerHTML=`<div class="modal" onclick="if(event.target===this)closeM()"><div class="card">${h}</div></div>`}
+function closeM(){$('#layer').innerHTML=''}
+function go(v,t){view=v;if(t)tab=t;q='';render()}
+const has=o=>!q||JSON.stringify(o).toLowerCase().includes(q.toLowerCase());
+const search=ph=>`<input placeholder="${ph}" value="${esc(q)}" oninput="q=this.value;render(true)" aria-label="Search">`;
+const table=(cols,rows)=>`<div class="tw"><table><thead><tr>${cols.map(c=>`<th>${c}</th>`).join('')}</tr></thead><tbody>${rows.join('')||`<tr><td colspan="${cols.length}" class="mut">Nothing here yet.</td></tr>`}</tbody></table></div>`;
+const btns=(...b)=>`<div class="tools noprint" style="margin-top:16px;justify-content:flex-end">${b.join('')}</div>`;
+const cancel='<button onclick="closeM()">Cancel</button>';
+
+function dashboard(){
+ const inc=by(['Pending','Scheduled','Delayed']),open=D.disc.filter(d=>d.status==='Open');
+ return `<h1>Welcome to Logistics!</h1><p class="sub">Receive, inspect, and report on incoming deliveries.</p>
+ <div class="grid g4">
+  <div class="card"><div class="mut">Incoming Deliveries</div><div class="big">${inc.length}</div><div class="mut">Expected deliveries</div></div>
+  <div class="card"><div class="mut">Pending Inspections</div><div class="big">${by(['Received']).length}</div><div class="mut">Awaiting inspection</div></div>
+  <div class="card"><div class="mut">Discrepancies</div><div class="big">${open.length}</div><div class="mut">Missing or damaged items</div></div>
+  <div class="card"><div class="mut">Completed Deliveries</div><div class="big">${by(['Completed']).length}</div><div class="mut">Successfully inspected</div></div>
+ </div>
+ <div class="grid g2">
+  <div class="card"><h2>Quick Actions</h2>
+   <div class="row"><span><b>Receive Delivery</b><br><span class="mut">Record an arrived delivery</span></span><button class="pri sm" onclick="go('delivery','Incoming Deliveries')">Receive</button></div>
+   <div class="row"><span><b>Start Inspection</b><br><span class="mut">Check received items</span></span><button class="sm" onclick="go('delivery','Inspection')">Inspect</button></div>
+   <div class="row"><span><b>Report Discrepancy</b><br><span class="mut">Missing or damaged items</span></span><button class="sm" onclick="reportD()">Report</button></div></div>
+  <div class="card"><h2>Delivery Alerts</h2>
+   <div class="row"><span>${open.length} deliveries have discrepancies.</span><button class="sm" onclick="go('delivery','Discrepancies')">View</button></div>
+   <div class="row"><span>${by(['Delayed']).length} delivery is delayed.</span><button class="sm" onclick="go('delivery','Incoming Deliveries')">View</button></div></div>
+ </div>
+ <div class="card"><h2>Upcoming Deliveries</h2>${table(['Delivery ID','PO number','Supplier','Expected','Status'],inc.slice(0,3).map(d=>`<tr><td>${d.id}</td><td>${d.po}</td><td>${esc(d.supplier)}</td><td>${d.date}</td><td>${pill(d.status)}</td></tr>`))}</div>`}
+
+function requisition(){
+ return `<h1>Requisition</h1><p class="sub">Request materials and supplies. Logistics acts as Requester.</p>
+ <div class="card"><div class="tools">${search('Search requisitions')}<button class="pri" onclick="newReq()">New requisition</button></div>${table(['ID','Item','Qty','Status'],D.reqs.filter(has).map(r=>`<tr><td>${r.id}</td><td>${esc(r.item)}</td><td>${r.qty}</td><td>${pill(r.status)}</td></tr>`))}</div>`}
+function newReq(){modal(`<h2>New requisition</h2><label for="a1">Item</label><input id="a1"><label for="a2">Quantity</label><input id="a2" type="number" min="1" value="1">${btns(cancel,'<button class="pri" onclick="saveReq()">Submit requisition</button>')}`)}
+function saveReq(){const item=$('#a1').value.trim(),qty=+$('#a2').value;if(!item||qty<1){toast('Enter an item and a quantity of at least 1');return}
+ D.reqs.unshift({id:nextId('REQ',D.reqs)+'L',item,qty,status:'Pending'});closeM();render();toast('Requisition submitted')}
+
+function delivery(){
+ let b='';const act=(d,l,f,p)=>`<td class="r"><button class="sm ${p?'pri':''}" onclick="${f}('${d}')">${l}</button></td>`;
+ if(tab===TABS[0])b=table(['Delivery ID','PO number','Supplier','Items','Expected','Status',''],by(['Pending','Scheduled','Delayed']).filter(has).map(d=>`<tr><td>${d.id}</td><td>${d.po}</td><td>${esc(d.supplier)}</td><td>${esc(d.items)}</td><td>${d.date}</td><td>${pill(d.status)}</td>${act(d.id,'Receive','receive',1)}</tr>`));
+ if(tab===TABS[1])b=table(['Delivery ID','PO number','Supplier','Items','Status',''],by(['Received']).filter(has).map(d=>`<tr><td>${d.id}</td><td>${d.po}</td><td>${esc(d.supplier)}</td><td>${esc(d.items)}</td><td>${pill(d.status)}</td>${act(d.id,'Start inspection','inspect',1)}</tr>`));
+ if(tab===TABS[2])b=`<div class="tools"><button class="pri" onclick="reportD()">Report discrepancy</button></div>`+table(['ID','Delivery','Issue','Status',''],D.disc.filter(d=>d.status==='Open'&&has(d)).map(d=>`<tr><td>${d.id}</td><td>${d.del}</td><td>${esc(d.issue)}</td><td>${pill(d.status)}</td>${act(d.id,'Resolve','resolve')}</tr>`));
+ if(tab===TABS[3])b=table(['ID','Delivery','Issue','Resolution','Status'],D.disc.filter(d=>d.status==='Resolved'&&has(d)).map(d=>`<tr><td>${d.id}</td><td>${d.del}</td><td>${esc(d.issue)}</td><td>${esc(d.res)}</td><td>${pill(d.status)}</td></tr>`));
+ if(tab===TABS[4])b=`<div class="tools noprint">${search('Search deliveries')}<button class="pri" onclick="window.print()">Print report</button></div>`+table(['Delivery ID','PO number','Supplier','Expected','Status',''],D.dels.filter(has).map(d=>`<tr><td>${d.id}</td><td>${d.po}</td><td>${esc(d.supplier)}</td><td>${d.date}</td><td>${pill(d.status)}</td>${['Pending','Scheduled','Delayed'].includes(d.status)?'<td></td>':act(d.id,'Receipt','receipt')}</tr>`));
+ return `<h1>Delivery</h1><p class="sub">Logistics acts as Delivery Handler and Receiving Staff.</p><div class="tabs">${TABS.map(t=>`<button class="${t===tab?'on':''}" onclick="tab='${t}';q='';render()">${t}</button>`).join('')}</div><div class="card">${b}</div>`}
+
+function receive(id){find(id).status='Received';receipt(id);render()}
+function receipt(id){const d=find(id);modal(`<h2>Receiving receipt</h2><div class="rc"><div class="row"><span>Delivery</span><b>${d.id}</b></div><div class="row"><span>PO number</span><span>${d.po}</span></div><div class="row"><span>Supplier</span><span>${esc(d.supplier)}</span></div><div class="row"><span>Items</span><span>${esc(d.items)}</span></div><div class="row"><span>Received on</span><span>${new Date().toISOString().slice(0,10)}</span></div><div class="row"><span>Status</span><span>${esc(d.status)}</span></div></div>${btns('<button onclick="closeM()">Close</button>','<button class="pri" onclick="window.print()">Print receipt</button>')}`)}
+function inspect(id){const d=find(id);modal(`<h2>Inspect ${d.id}</h2><p class="mut">${esc(d.items)} from ${esc(d.supplier)}</p><label for="i1">Result</label><select id="i1"><option value="ok">All items complete and in good condition</option><option value="bad">Missing or damaged items</option></select><label for="i2">Issue details (if any)</label><input id="i2" placeholder="Example: 3 rolls damaged">${btns(cancel,`<button class="pri" onclick="saveInspect('${id}')">Save inspection</button>`)}`)}
+function saveInspect(id){const d=find(id),bad=$('#i1').value==='bad',t=$('#i2').value.trim();
+ if(bad&&!t){toast('Describe the missing or damaged items');return}
+ if(bad){d.status='With Issues';D.disc.push({id:nextId('DSC',D.disc),del:id,issue:t,status:'Open',res:''})}else d.status='Completed';
+ closeM();go('delivery',bad?'Discrepancies':'Inspection');toast(bad?'Discrepancy reported':'Delivery completed. Inventory can record the stock-in.')}
+function reportD(){modal(`<h2>Report discrepancy</h2><label for="r1">Delivery</label><select id="r1">${D.dels.filter(d=>!['Pending','Scheduled','Delayed'].includes(d.status)).map(d=>`<option value="${d.id}">${d.id} - ${esc(d.supplier)}</option>`).join('')}</select><label for="r2">Issue</label><input id="r2" placeholder="Missing or damaged items">${btns(cancel,'<button class="pri" onclick="saveD()">Report</button>')}`)}
+function saveD(){const id=$('#r1').value,t=$('#r2').value.trim();if(!id||!t){toast('Pick a received delivery and describe the issue');return}
+ find(id).status='With Issues';D.disc.push({id:nextId('DSC',D.disc),del:id,issue:t,status:'Open',res:''});closeM();go('delivery','Discrepancies');toast('Discrepancy reported')}
+function resolve(id){modal(`<h2>Resolve ${id}</h2><label for="v1">Resolution agreed with supplier</label><select id="v1"><option>Replacement</option><option>Refund</option><option>Credit note</option></select>${btns(cancel,`<button class="pri" onclick="saveRes('${id}')">Save resolution</button>`)}`)}
+function saveRes(id){const x=D.disc.find(d=>d.id===id);x.status='Resolved';x.res=$('#v1').value;find(x.del).status='Completed';closeM();go('delivery','Resolutions');toast('Discrepancy resolved')}
+
+function render(keep){
+ $('#nav').innerHTML=VIEWS.map(([k,l])=>`<a class="${k===view?'on':''}" tabindex="0" onclick="go('${k}')" onkeydown="if(event.key==='Enter')go('${k}')">${l}</a>`).join('')+`<a tabindex="0" onclick="toast('Logout is a demo for now')">Logout</a>`;
+ const y=window.scrollY;$('#main').innerHTML=({dashboard,requisition,delivery})[view]();
+ if(keep){const el=document.querySelector('main input');if(el){el.focus();el.setSelectionRange(q.length,q.length)}window.scrollTo(0,y)}
+}
+render();
+</script>
+</body></html>
