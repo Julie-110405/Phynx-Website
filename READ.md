@@ -11,6 +11,8 @@ how to push code:
 git add .
 git commit -m "Update website"
 git push
+git push --set-upstream origin main
+
 
 how to pull code:
 git pull origin main
