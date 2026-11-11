@@ -1,49 +1,84 @@
-
-const accounts = {
-    procurement: {
-        username: "procurement",
-        password: "pynx123",
-        dashboard: "../departments/procurement.html"
-    },
-
-    logistics: {
-        username: "logistics",
-        password: "pynx123",
-        dashboard: "../departments/logistics.html"
-    }
+const DEPARTMENT_ROUTES = {
+    "admin": "../Admin/admin_dashboard.html",
+    "finance": "../Finance/finance_dashboard.html",
+    "marketing": "../Maketing/marketing_dashboard.html",
+    "procurement": "../Procurement/procurement_dashboard.html",
+    "inventory": "../Inventory/pynx-inventory/index.html",
+    "logistics": "../Logistics/logistics_dashboard.html"
 };
 
 const loginForm = document.getElementById("loginForm");
+const usernameInput = document.getElementById("username");
+const passwordInput = document.getElementById("password");
 const errorMessage = document.getElementById("errorMessage");
+const loginButton = document.getElementById("loginButton");
 
-loginForm.addEventListener("submit", function(event) {
+function showError(message) {
+    errorMessage.textContent = message;
+}
+
+function setLoading(isLoading) {
+    loginButton.disabled = isLoading;
+    loginButton.style.opacity = isLoading ? "0.7" : "1";
+    loginButton.style.cursor = isLoading ? "not-allowed" : "pointer";
+}
+
+loginForm.addEventListener("submit", async function (event) {
     event.preventDefault();
+    showError("");
+    setLoading(true);
 
-    const department = document.getElementById("department").value;
-    const username = document.getElementById("username").value.trim();
-    const password = document.getElementById("password").value;
+    let identifier = usernameInput.value.trim().toLowerCase();
+    const password = passwordInput.value;
 
-    errorMessage.textContent = "";
-
-    if (!department) {
-        errorMessage.textContent = "Please select your department.";
-        return;
+    if (!identifier.includes("@")) {
+        identifier = identifier + "@phynx.web";
     }
 
-    const account = accounts[department];
+    try {
+        // 1. Sign in with Supabase Auth
+        const { data: authData, error: authError } =
+            await window.supabaseClient.auth.signInWithPassword({
+                email: identifier,
+                password: password
+            });
 
-    if (!account) {
-        errorMessage.textContent = "Invalid department selected.";
-        return;
-    }
+        if (authError || !authData || !authData.user) {
+            showError("Invalid username or password.");
+            setLoading(false);
+            return;
+        }
 
-    if (
-        username === account.username &&
-        password === account.password
-    ) {
-        window.location.href = account.dashboard;
-    } else {
-        errorMessage.textContent =
-            "Incorrect username or password. Please try again.";
+        // 2. Get the user's department from the profiles table
+        const { data: profile, error: profileError } =
+            await window.supabaseClient
+                .from("profiles")
+                .select("username, department, role")
+                .eq("id", authData.user.id)
+                .single();
+
+        if (profileError || !profile) {
+            await window.supabaseClient.auth.signOut();
+            showError("No department profile found for this account.");
+            setLoading(false);
+            return;
+        }
+
+        // 3. Redirect to the correct department page
+        const destination = DEPARTMENT_ROUTES[profile.department.toLowerCase()];
+
+        if (!destination) {
+            await window.supabaseClient.auth.signOut();
+            showError("No workspace is assigned to this department.");
+            setLoading(false);
+            return;
+        }
+
+        window.location.href = destination;
+
+    } catch (err) {
+        console.error(err);
+        showError("Something went wrong. Please try again.");
+        setLoading(false);
     }
 });
