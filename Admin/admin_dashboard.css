@@ -1,5 +1,4 @@
-/* PHYNX ERP – shared styles for Admin and Finance.
-   Visual style follows the Inventory dashboard (cream background, black sidebar, white rounded cards). */
+/*admin dashboard*/
 :root {
   --bg: #efebe5; --ink: #111; --mut: #6b655d; --card: #fff; --line: #e8e3dc;
   --ok: #1f7a4d; --okb: #d8f0e2; --warn: #a8741a; --warnb: #fbecc8; --bad: #b3392f; --badb: #f8d9d5; --sb: #000;
