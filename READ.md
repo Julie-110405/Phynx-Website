@@ -26,3 +26,10 @@ Marketing / Creative and Design - marketing@phynx.web, marketing404
 Procument - procurement@phynx.web, procurement323
 Inventory - inventory@phynx.web, inventory999
 Logistics - logictics@phynx.web, logictics111
+
+Database password: 2004jjmvvt2004
+
+Supabase:
+SLUG: ftvecbweonsgxxtdzjmz
+KEY: sb_publishable_c4ckS2DLwXt2vvC7kO75Dw_SbK40aa1
+URL: https://ftvecbweonsgxxtdzjmz.supabase.co/rest/v1/
