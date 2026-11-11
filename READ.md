@@ -17,3 +17,12 @@ git push --set-upstream origin main
 how to pull code:
 git pull origin main
 git status
+
+
+Email and passwords:
+Admin - admin@phynx.web, admin987
+Finance  - finance@phynx.web, finance675
+Marketing / Creative and Design - marketing@phynx.web, marketing404
+Procument - procurement@phynx.web, procurement323
+Inventory - inventory@phynx.web, inventory999
+Logistics - logictics@phynx.web, logictics111
